@@ -1,1 +1,12 @@
-필요한 패키지 목록들 아래 나열예정
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+python-multipart
+pydantic
+python-dotenv
+numpy
+pandas
+scikit-learn
+torch
+psycopg2-binary

@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import pickle
 import numpy as np
+from torch.serialization import add_safe_globals
 
 # DMLP 클래스 정의
 class DMLP(nn.Module):
@@ -25,6 +26,11 @@ class DMLP(nn.Module):
     def forward(self, x):
         return self.net(x)
 
+import __main__
+__main__.DMLP = DMLP
+
+add_safe_globals({'DMLP': DMLP})
+
 # 모델 및 인코더 불러오기
 MODEL_PATH = "models/style_dmlp.pth"
 MLB_PATH = "models/mlb.pkl"
@@ -42,8 +48,9 @@ with open(MLB_PATH, 'rb') as f:
 input_size = len(mlb.classes_)
 num_classes = len(LABEL_MAP)
 
-model = DMLP(input_size, num_classes)
-model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
+#model = DMLP(input_size, num_classes)
+#model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu'), weights_only=False))
+model = torch.load(MODEL_PATH, map_location=torch.device('cpu'), weights_only=False)
 model.eval()
 
 # 예측 함수
