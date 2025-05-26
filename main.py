@@ -9,7 +9,7 @@ from api.feedback import router as feedback_router
 from api.similarity import router as similarity_router
 from api.upload import router as upload_router
 from core.rules_loader import load_rules_with_score, rules_to_dict_sorted_key
-
+print("✅ FastAPI starting...")
 app = FastAPI()
 
 # CORS 허용 (필요 시 origin 제한 가능)
@@ -29,6 +29,7 @@ def root():
     return {"message": "Fastapi server is running"}
 
 # 라우터 등록
+print("✅ Registering routers")
 app.include_router(auth_router)
 app.include_router(closet_router)
 app.include_router(recommend_router)
@@ -44,7 +45,7 @@ feature_dict = rules_to_dict_sorted_key(feature_df, is_color=False)
 # 전역으로 공유
 app.state.color_dict = color_dict
 app.state.feature_dict = feature_dict
-
+print("✅ App is ready")
 # 가상환경 활성화 : venv\Scripts\Activate.ps1
 # 서버실행 : uvicorn main:app --reload
 # http://localhost:8000/docs

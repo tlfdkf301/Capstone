@@ -18,9 +18,8 @@ router = APIRouter()
 
 # 요청 스키마
 class RecommendationRequest(BaseModel):
-    user_id: int
     selected_item_id: str  # 예: "상의_103"
-    selected_tpo: str      # 예: "데이트"
+    tpo: str               # 예: "데이트"
 
 # 응답 스키마
 class RecommendedItem(BaseModel):
@@ -28,30 +27,30 @@ class RecommendedItem(BaseModel):
     item_ids: List[str]
 
 class RecommendationResponse(BaseModel):
-    selected_item_id: str
-    tpo: str
-    recommendations: List[RecommendedItem]
+    recommend_id: str
+    selected: Dict[str, Any]
+    recommendations: Dict[str, List[Dict[str, Any]]]
 
-@router.post("/", response_model=RecommendationResponse)
+@router.post("/recommend", response_model=RecommendationResponse)
 def recommend_clothes(req: RecommendationRequest, request: Request, db: Session = Depends(get_db)):
-    # 1. 전역 룰 테이블 불러오기
+    # 1. 룰 테이블 (전역 상태에서 가져옴)
     color_dict = request.app.state.color_dict
     feature_dict = request.app.state.feature_dict
 
-    # 2. 사용자 옷장 전체 불러오기
-    user_clothes = get_user_clothes(req.user_id, db)
+    # 2. 옷장 불러오기
+    user_clothes = get_user_clothes(user_id=1, db=db)
 
-    # 3. 스타일 예측 (style_probs 없으면)
+    # 3. 스타일 예측 적용
     user_clothes = apply_style_predictions(user_clothes, model, mlb, LABEL_MAP)
 
-    # 4. 선택된 옷 1개 불러오기
+    # 4. 선택 옷 가져오기
     selected_clothing = get_selected_clothing(req.selected_item_id, db)
     if not selected_clothing:
-        raise HTTPException(status_code=404, detail="선택한 옷을 찾을 수 없습니다")
+        raise HTTPException(status_code=404, detail="선택한 옷을 찾을 수 없습니다.")
 
     # 5. 추천 실행
     result_dict = run_recommendation(
-        selected_tpo=req.selected_tpo,
+        selected_tpo=req.tpo,
         selected_clothing=selected_clothing,
         color_dict=color_dict,
         feature_dict=feature_dict,
@@ -59,14 +58,8 @@ def recommend_clothes(req: RecommendationRequest, request: Request, db: Session 
         tpo_score_table=tpo_score_table
     )
 
-    # 6. 응답 변환
-    recommendations = [
-        RecommendedItem(category=cat, item_ids=items)
-        for cat, items in result_dict.items()
-    ]
-
     return RecommendationResponse(
-        selected_item_id=req.selected_item_id,
-        tpo=req.selected_tpo,
-        recommendations=recommendations
+        recommend_id="r001",  # 추후 고유 ID 생성 로직으로 대체 가능
+        selected=selected_clothing,
+        recommendations=result_dict
     )
