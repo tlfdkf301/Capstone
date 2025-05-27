@@ -6,6 +6,11 @@ import uuid
 import shutil
 import os
 
+# YOLO, ResNet 모델 import
+from models.yolo import run_yolo
+from models.resnet import run_resnet
+from core.feature_mapper import map_ai_attributes_to_features
+
 router = APIRouter()
 
 UPLOAD_DIR = "static/uploads"
@@ -14,7 +19,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @router.post("/closet/upload")
 def upload_clothing_image(
     image: UploadFile = File(...),
-    category: str = Form(...),  # top, bottom, outer, dress
+    # category: str = Form(...),  # top, bottom, outer, dress
     db: Session = Depends(get_db)
 ):
     # 1. 이미지 저장
@@ -25,28 +30,34 @@ def upload_clothing_image(
 
     image_url = f"/static/uploads/{filename}"  # 프론트 전달용
 
-    # 2. AI 서버 호출 (여기서는 더미 결과)
-    ai_result = {
-        "color": "black",
-        "fit": "loose",
-        "length": "long",
-        "material": "cotton",
-        "sleeve_length": "long sleeves",
-        "collar": "v-neck",
-        "style_probs": {
-            "casual": 0.6,
-            "formal": 0.3,
-            "sporty": 0.1
-        }
-    }
+    # 2. AI 서버 호출 
+    try:
+        category_result = run_yolo(file_path)  
+    except Exception as e:
+        return {"error": f"YOLO 예측 실패: {str(e)}"}
+
+    try:
+        attributes = run_resnet(file_path)
+    except Exception as e:
+        return {"error": f"ResNet 예측 실패: {str(e)}"}
+    
+    features = map_ai_attributes_to_features(attributes)
 
     # 3. DB 저장
     new_clothes = Clothes(
         user_id=1,
-        category=category,
+        maincategory=category_result["mainCategory"],
+        category=category_result["category"],
         image_url=image_url,
-        **ai_result
+        color=attributes.get("color"),
+        fit=attributes.get("pants_silhouette"),  # 예시: 하의 silhouette을 fit에 매핑
+        length=attributes.get("top_length"),
+        material=attributes.get("fiber"),
+        sleeve_length=attributes.get("sleeve_length"),
+        collar=None,  # AI가 collar 예측하지 않으면 None
+        style_probs=None
     )
+
     db.add(new_clothes)
     db.commit()
     db.refresh(new_clothes)

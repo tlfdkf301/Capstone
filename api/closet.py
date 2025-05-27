@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from database import get_db
 from models.clothes import Clothes
 from pydantic import BaseModel
-from typing import Optional, Dict
+from typing import Optional, Dict, List
+from core.response_utils import format_clothes_response
 
 router = APIRouter()
 
@@ -11,7 +12,7 @@ router = APIRouter()
 @router.get("/closet")
 def get_all_clothes(db: Session = Depends(get_db)):
     clothes = db.query(Clothes).filter(Clothes.user_id == 1).all()
-    return clothes
+    return [format_clothes_response(c) for c in clothes]
 
 # 2. 상세 조회
 @router.get("/closet/{item_id}")
@@ -56,3 +57,20 @@ def delete_clothing(item_id: int, db: Session = Depends(get_db)):
     db.delete(clothing)
     db.commit()
     return {"message": "삭제 완료", "item_id": item_id}
+
+@router.get("/closet/frequent", response_model=List[Clothes])
+async def get_frequent_clothes(limit: int = Query(10, gt=0, le=100)):
+    """
+    이름은 frequent지만, 실제로는
+    created_at 내림차순(최근 추가순)으로 limit 개수만큼 반환합니다.
+    """
+    # 전체 아이템 불러오기
+    all_items: List[Clothes] = get_all_clothes()
+
+    # created_at 으로 정렬 (datetime 혹은 ISO 문자열 비교)
+    sorted_items = sorted(
+        all_items,
+        key=lambda item: item.created_at,
+        reverse=True
+    )
+    return sorted_items[:limit]

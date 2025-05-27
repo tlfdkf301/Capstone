@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from api.weather import router as weather_router
 from api.auth import router as auth_router
 from api.closet import router as closet_router
 from api.recommend import router as recommend_router
@@ -11,7 +12,7 @@ from api.upload import router as upload_router
 from core.rules_loader import load_rules_with_score, rules_to_dict_sorted_key
 print("✅ FastAPI starting...")
 app = FastAPI()
-
+app.include_router(weather_router)
 # CORS 허용 (필요 시 origin 제한 가능)
 app.add_middleware(
     CORSMiddleware,
@@ -41,6 +42,10 @@ app.include_router(upload_router, prefix="/upload", tags=["upload"])
 color_df, feature_df = load_rules_with_score()
 color_dict = rules_to_dict_sorted_key(color_df, is_color=True)
 feature_dict = rules_to_dict_sorted_key(feature_df, is_color=False)
+
+@app.get("/ping")
+async def ping():
+    return {"status": "ok"}
 
 # 전역으로 공유
 app.state.color_dict = color_dict
