@@ -1,11 +1,14 @@
+import os
 import requests
 from fastapi import APIRouter
+from dotenv import load_dotenv
+
+load_dotenv()
 
 router = APIRouter()
 
-API_KEY = "7174e06eb4f8970f7073304bf6511f27"
 CITY = "Seoul"
-
+API_KEY = os.getenv("OPENWEATHER_API_KEY")
 # 영어 날씨 → 한글 간단 변환
 WEATHER_MAP = {
     "Clear": "맑음",

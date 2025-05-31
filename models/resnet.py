@@ -1,10 +1,12 @@
 import torch
+import numpy as np
 import torch.nn as nn
 from torchvision import models, transforms
 from sklearn.preprocessing import LabelEncoder
 from PIL import Image
 
 WEIGHT_PATH = "models/weights/"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class ResNet18Classifier(nn.Module):
     def __init__(self, num_classes):
@@ -20,22 +22,46 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
+
+
+# def predict_attribute(image_path, model, encoder):
+#     image = Image.open(image_path).convert('RGB')
+    
+#     image = transform(image).unsqueeze(0).to(device)
+#     model.to(device)
+#     model.eval()
+#     with torch.no_grad():
+#         output = model(image)
+#         pred_idx = torch.argmax(output, dim=1).item()
+#         return encoder.inverse_transform([pred_idx])[0]
 def predict_attribute(image_path, model, encoder):
     image = Image.open(image_path).convert('RGB')
-    image = transform(image).unsqueeze(0).cuda()
+    image = transform(image).unsqueeze(0).to(device)
     model.eval()
     with torch.no_grad():
         output = model(image)
         pred_idx = torch.argmax(output, dim=1).item()
         return encoder.inverse_transform([pred_idx])[0]
 
+
+
+
+# def load_model_and_encoder(name, classes):
+#     encoder = LabelEncoder()
+#     encoder.classes_ = classes
+#     model = ResNet18Classifier(len(classes))
+#     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#     model.load_state_dict(torch.load(f"{WEIGHT_PATH}best_model_{name}.pth", map_location=device))
+#     model = model.to(device)
+#     return model, encoder
 def load_model_and_encoder(name, classes):
     encoder = LabelEncoder()
-    encoder.classes_ = classes
+    encoder.classes_ = np.array(classes)  # ✅ 반드시 ndarray로!
     model = ResNet18Classifier(len(classes))
-    model.load_state_dict(torch.load(f"{WEIGHT_PATH}best_model_{name}.pth"))
-    return model.cuda(), encoder
+    model.load_state_dict(torch.load(f"{WEIGHT_PATH}best_model_{name}.pth", map_location=device))
+    return model.to(device), encoder
 
+# 모델들 로딩
 model_color, encoder_color = load_model_and_encoder("color", [
     'black', 'white', 'beige', 'gray', 'blue', 'brown', 'green',
     'pink', 'purple', 'red', 'yellow', 'orange'])

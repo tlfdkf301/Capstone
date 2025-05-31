@@ -43,3 +43,45 @@ top_length_map = {
     'short': '미니',
     'crop': '크롭'
 }
+
+category_map = {
+    'coat': '코트',
+    'jacket': '재킷',
+    'jumper': '점퍼',
+    'cardigan': '가디건',
+    'blouse': '블라우스',
+    't-shirt': '티셔츠',
+    'sweater': '니트웨어',  # sweater 오타 수정
+    'shirt': '셔츠',
+    'vest': '베스트',
+    'onepiece(dress)': '드레스',
+    'onepiece(jumpsuit)': '점프수트',
+    'pants': '팬츠',
+    'skirt': '스커트',
+    'jeans': '청바지',
+    'leggings': '래깅스',
+    'jogger': '조거팬츠'
+}
+# 투명도 (임의 번역)
+transparency_map = {
+    'none at all': '완전 불투명',
+    'none': '거의 불투명',
+    'contain little': '약간 비침',
+    'contain': '비침 있음',
+    'contain a lot': '많이 비침'
+}
+
+# 계절 (임의 번역)
+season_map = {
+    'spring&fall': '봄/가을',
+    'winter': '겨울',
+    'summer': '여름'
+}
+
+
+maincategory_map = {
+    "top": "상의",
+    "bottom": "하의",
+    "outer": "아우터",
+    "dress": "원피스"
+}

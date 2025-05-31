@@ -208,14 +208,37 @@ def flatten_scores(score_dict):
     return flat
 
 
+# def standardize_all_items(score_dict):
+#     """
+#     전체 아이템 기준 Z-score 정규화 + NaN 방지
+#     """
+#     flat = flatten_scores(score_dict)
+#     if not flat:
+#         return {}
+
+#     values = np.array(list(flat.values()))
+#     mean = values.mean()
+#     std = values.std()
+#     if std == 0 or np.isnan(std):
+#         std = 1e-8
+
+#     standardized = {k: (v - mean) / std for k, v in flat.items()}
+#     return standardized
+
 def standardize_all_items(score_dict):
-    """
-    전체 아이템 기준 Z-score 정규화
-    """
     flat = flatten_scores(score_dict)
     values = np.array(list(flat.values()))
+
+    if len(values) == 0:
+        return {}
+
     mean = values.mean()
-    std = values.std() if values.std() > 0 else 1e-8
+    std = values.std()
+
+    if std == 0:
+        # 모든 점수가 동일한 경우, 모두 0으로 처리
+        return {k: 0.0 for k in flat}
+
     standardized = {k: (v - mean) / std for k, v in flat.items()}
     return standardized
 

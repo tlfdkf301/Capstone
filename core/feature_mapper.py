@@ -25,3 +25,29 @@ def map_ai_attributes_to_features(attributes: dict) -> list[str]:
         if val: result.append(f"{prefix_map['top_length']}_{val}")
 
     return result
+
+
+def map_ai_attributes_to_kfashion_dict(attributes: dict) -> dict:
+    result = {}
+
+    if "color" in attributes:
+        val = color_map.get(attributes["color"])
+        if val: result["color"] = val
+
+    if "fiber" in attributes:
+        val = fiber_map.get(attributes["fiber"])
+        if val: result["material"] = val
+
+    if "pants_silhouette" in attributes:
+        val = fit_map.get(attributes["pants_silhouette"])
+        if val: result["fit"] = val
+
+    if "sleeve_length" in attributes:
+        val = sleeve_map.get(attributes["sleeve_length"])
+        if val: result["sleeve_length"] = val
+
+    if "top_length" in attributes:
+        val = top_length_map.get(attributes["top_length"])
+        if val: result["length"] = val
+
+    return result

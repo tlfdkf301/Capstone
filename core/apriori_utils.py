@@ -1,4 +1,37 @@
 # 연관 규칙 유사도 점수 계산
+category_to_prefix_map = {
+    '베스트': '상의',
+    '티셔츠': '상의',
+    '셔츠': '상의',
+    '블라우스' : '상의',
+    '니트웨어' : '상의',
+    # '가디건': '상의',
+    '점퍼': '아우터',
+    '재킷': '아우터',
+    '코트': '아우터',
+    '가디건' : '아우터',
+    '청바지': '하의',
+    '조거팬츠': '하의',
+    '슬랙스': '하의',
+    '스커트': '하의',
+    '원피스': '원피스',
+    '점프수트' : '원피스',
+    '팬츠' : '하의',
+    '래깅스' : '하의'
+}
+# core/score_utils.py 또는 해당 위치에서 사용 중인 추천 함수 내
+VALID_FEATURES = {
+    '상의': ['핏', '소매기장', '소재', '옷깃'],
+    '하의': ['핏', '기장', '소재'],
+    '아우터': ['핏', '기장', '소매기장'],
+    '원피스': ['핏', '기장', '소매기장', '소재', '옷깃']
+}
+
+def get_feature_type(f):
+    try:
+        return f.split('_')[1]
+    except IndexError:
+        return None
 
 def score_recommendation_dict_sorted_key(item, cat, color_dict, feature_dict, user_clothes, color_rate=1):
     current_id = item[0]

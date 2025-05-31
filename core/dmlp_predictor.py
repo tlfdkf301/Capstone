@@ -54,7 +54,23 @@ model = torch.load(MODEL_PATH, map_location=torch.device('cpu'), weights_only=Fa
 model.eval()
 
 # 예측 함수
-def predict_top3_tpo(items, device='cpu'):
+# def predict_top3_tpo(items, device='cpu'):
+#     sample_X = mlb.transform([items])
+#     sample_X = torch.tensor(sample_X, dtype=torch.float32).to(device)
+
+#     model.eval()
+#     with torch.no_grad():
+#         output = model(sample_X)
+#         probs = torch.softmax(output, dim=1).cpu().numpy()[0]
+
+#     top3_indices = probs.argsort()[-3:][::-1]
+#     top3_labels = {IDX_TO_LABEL[i]: round(probs[i], 4) for i in top3_indices}
+
+#     return top3_labels
+def predict_top3_tpo(items, model, mlb, label_to_idx=None, device='cpu'):
+    if isinstance(items, dict):
+        items = [f"{k}_{v}" for k, v in items.items() if v]
+
     sample_X = mlb.transform([items])
     sample_X = torch.tensor(sample_X, dtype=torch.float32).to(device)
 
@@ -65,5 +81,4 @@ def predict_top3_tpo(items, device='cpu'):
 
     top3_indices = probs.argsort()[-3:][::-1]
     top3_labels = {IDX_TO_LABEL[i]: round(probs[i], 4) for i in top3_indices}
-
     return top3_labels

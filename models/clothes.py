@@ -11,7 +11,8 @@ class Clothes(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, default=1)
-    category = Column(String)  # top, bottom, outer, dress
+    maincategory = Column(String)  # top, bottom, outer, dress
+    category=Column(String)
     image_url = Column(String)
 
     # 옷 특징

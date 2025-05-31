@@ -29,7 +29,7 @@ YOLO_MODEL_PATH = "models/weights/YOLO_best_model.pt"
 
 def run_yolo(image_path: str) -> str:
     model = YOLO(YOLO_MODEL_PATH)
-    results = model.predict(source=image_path, task='segment', save=False)
+    results = model.predict(source=image_path, task='segment', save=False, device="cpu")
     cls_id = int(results[0].boxes.cls[0])
     subcategory = class_names[cls_id]
     main_category = main_category_map.get(subcategory, "unknown")
