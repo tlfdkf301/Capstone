@@ -9,8 +9,6 @@ numpy
 pandas
 scikit-learn
 torch
-psycopg2-binary
-ultralytics
 torchvision
-PIL
-sklearn
+ultralytics
+Pillow
