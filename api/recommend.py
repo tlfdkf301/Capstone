@@ -1,128 +1,9 @@
-# from fastapi import APIRouter, Request, Depends, HTTPException
-# from pydantic import BaseModel
-# from typing import List, Dict, Any
-# from sqlalchemy.orm import Session
-# from datetime import datetime
-
-# from database import get_db
-# from models.recommendation import RecommendationHistory
-# from core.closet_utils import get_user_clothes, get_selected_clothing
-# from core.preprocessing_utils import apply_style_predictions
-# from core.dmlp_predictor import model, mlb, LABEL_MAP
-# from core.score_utils import tpo_score_table
-# from core.recommend_utils import run_recommendation
-# from core.response_utils import format_clothes_response
-# from core.ai_label_to_kfashion import maincategory_map
-
-# router = APIRouter()
-
-# # 요청 모델
-# class RecommendationRequest(BaseModel):
-#     selected_item_id: str  
-#     tpo: str               # 예: "데이트"
-
-# # 응답 모델
-# class RecommendationResponse(BaseModel):
-#     recommend_id: str
-#     selected: Dict[str, Any]
-#     tpo: str
-#     recommendations: List[Dict[str, Any]]  # ✅ 여기!
-
-# # 추천 실행 API
-# @router.post("/recommend", response_model=RecommendationResponse)
-# def recommend_clothes(req: RecommendationRequest, request: Request, db: Session = Depends(get_db)):
-#     # 1. 전역 룰 테이블 불러오기
-#     color_dict = request.app.state.color_dict
-#     feature_dict = request.app.state.feature_dict
-#     print("✅ feature_dict 샘플:", list(feature_dict.keys())[:5])
-
-#     # 2. 옷장 전체 불러오기
-#     user_clothes = get_user_clothes(user_id=1, db=db)
-    
-#     # ✅ 디버깅용 코드 삽입
-#     print("✅ [DEBUG] 선택된 item_id:", req.selected_item_id)
-#     print("✅ [DEBUG] user_clothes 구조:")
-#     for cat, items in user_clothes.items():
-#         print(f"  - {cat}: {[item[0] for item in items]}")
-
-#     # 3. 스타일 예측 (style_probs 없으면 예측)
-#     user_clothes = apply_style_predictions(user_clothes, model, mlb, LABEL_MAP)
-
-#     # 4. 선택된 옷 가져오기
-#     selected_clothing = get_selected_clothing(req.selected_item_id, db)
-#     if not selected_clothing:
-#         raise HTTPException(status_code=404, detail="선택한 옷을 찾을 수 없습니다.")
-
-#     # 5. 추천 알고리즘 실행
-#     result_dict = run_recommendation(
-#         selected_tpo=req.tpo,
-#         selected_clothing=selected_clothing,
-#         color_dict=color_dict,
-#         feature_dict=feature_dict,
-#         user_clothes=user_clothes,
-#         tpo_score_table=tpo_score_table
-#     )
-
-#     # 6. 추천 결과 저장
-#     new_history = RecommendationHistory(
-#         user_id=1,
-#         selected_item_id=req.selected_item_id,
-#         tpo=req.tpo,
-#         recommended_items=result_dict,
-#         created_at=datetime.utcnow()
-#     )
-#     db.add(new_history)
-#     db.commit()
-#     db.refresh(new_history)
-
-
-#     # 응답 포맷 가공
-#     formatted_result = {
-#         cat: [format_clothes_response(item) for item in items]
-#         for cat, items in result_dict.items()
-#     }
-
-#     formatted_selected = format_clothes_response(selected_clothing)
-
-#     return {
-#         "recommend_id": str(new_history.id),
-#         "selected": formatted_selected,
-#         "tpo": req.tpo,
-#         "recommendations": [
-#     {
-#         "mainCategory": maincategory_map.get(cat, cat),
-#         "items": formatted_result[cat]
-#     }
-#     for cat in formatted_result
-# ]
-#     }
-
-# # 추천 기록 조회 API
-# @router.get("/recommend/history")
-# def get_recommendation_history(db: Session = Depends(get_db)):
-#     history = (
-#         db.query(RecommendationHistory)
-#         .filter(RecommendationHistory.user_id == 1)
-#         .order_by(RecommendationHistory.created_at.desc())
-#         .all()
-#     )
-
-#     return [
-#         {
-#             "recommend_id": r.id,
-#             "selected_item_id": r.selected_item_id,
-#             "tpo": r.tpo,
-#             "recommendations": r.recommended_items,
-#             "created_at": r.created_at.isoformat()
-#         }
-#         for r in history
-#     ]
 from fastapi import APIRouter, Request, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from datetime import datetime
-
+from PIL import Image
 from database import get_db
 from models.recommendation import RecommendationHistory
 from models.clothes import Clothes
@@ -133,25 +14,46 @@ from core.score_utils import tpo_score_table
 from core.recommend_utils import run_recommendation
 from core.response_utils import format_clothes_response
 from core.ai_label_to_kfashion import maincategory_map
-
+import json
+import uuid
+import os
 router = APIRouter()
+
+class RecommendImageUpdateRequest(BaseModel):
+    imageUrl: str
 
 class RecommendationRequest(BaseModel):
     selected_item_id: str
     tpo: str
 
 class RecommendationResponse(BaseModel):
-    recommend_id: str
-    selected: Dict[str, Any]
+    id: int
+    imageUrl: str
+    description: str
+    clothingIds: List[int]
     tpo: str
-    recommendations: List[Dict[str, Any]]
+    created_at: str
+
+class RecommendEditRequest(BaseModel):
+    description: str
+
+class RecommendEditResponse(BaseModel):
+    result: str
+
+class RecommendItem(BaseModel):
+    id: int
+    imageUrl: str
+    description: str
+    clothingIds: List[int]
+    tpo: str
+    created_at: str
 
 @router.post("/recommend", response_model=RecommendationResponse)
 def recommend_clothes(req: RecommendationRequest, request: Request, db: Session = Depends(get_db)):
     color_dict = request.app.state.color_dict
     feature_dict = request.app.state.feature_dict
 
-    user_clothes = get_user_clothes(user_id=1, db=db)
+    user_clothes = get_user_clothes(db=db)
     print("✅ [DEBUG] 선택된 item_id:", req.selected_item_id)
     print("✅ [DEBUG] user_clothes 구조:")
     for cat, items in user_clothes.items():
@@ -175,50 +77,67 @@ def recommend_clothes(req: RecommendationRequest, request: Request, db: Session 
         tpo_score_table=tpo_score_table
     )
 
+    auto_description = f"새 추천{uuid.uuid4().hex[:8]}" # 추천description 자동생성
+
+    flattened_item_ids = []
+    for item_list in result_dict.values():
+        for item_id in item_list:
+            raw_id = item_id.split('_')[-1]
+            flattened_item_ids.append(raw_id)
+
     new_history = RecommendationHistory(
-        user_id=1,
         selected_item_id=req.selected_item_id,
         tpo=req.tpo,
-        recommended_items=result_dict,
+        clothingIds=flattened_item_ids,
+        description=auto_description, # 추천 description 자동생성
         created_at=datetime.utcnow()
     )
     db.add(new_history)
     db.commit()
     db.refresh(new_history)
-    print("========================")
-    print(user_clothes)
     # DB에서 전체 옷 목록 조회해서 매핑
     clothes_list = db.query(Clothes).all()
     clothes_dict = {str(item.id): item for item in clothes_list}
 
-    formatted_result = {}
-    for cat, item_ids in result_dict.items():
-        formatted_result[cat] = []
-        for item_id in item_ids:
-            raw_id = item_id.split('_')[-1]
-            item_obj = clothes_dict.get(raw_id)
-            if item_obj:
-                formatted_result[cat].append(format_clothes_response(item_obj))
+    UPLOAD_DIR = "static/uploads"  # 기존 옷 이미지 저장 경로
+    RECOMMEND_DIR = "static/recommend"
+    os.makedirs(RECOMMEND_DIR, exist_ok=True)
+    
+    grid_image = Image.new("RGB", (400, 400), color="white")
+    positions = [(0, 0), (200, 0), (0, 200)]
+    for i, item_id in enumerate(flattened_item_ids[:3]):
+        item_obj = clothes_dict.get(item_id)
+        if item_obj and item_obj.image_url:
+            image_filename = os.path.basename(item_obj.image_url)
+            full_path = os.path.join(UPLOAD_DIR, image_filename)
+            if os.path.exists(full_path):
+                img = Image.open(full_path).resize((200, 200))
+                grid_image.paste(img, positions[i])
 
-    formatted_selected = selected_clothing
+    image_filename = f"recommend_{new_history.id}.png"
+    image_path = os.path.join(RECOMMEND_DIR, image_filename)
+    grid_image.save(image_path)
 
+    # ✅ 절대 URL 생성
+    image_url = str(request.url_for("static", path=f"recommend/{image_filename}"))
+    new_history.imageUrl = image_url
+    db.commit()
+
+    selected_raw_id = req.selected_item_id.split('_')[-1]
+    clothingIds = [int(selected_raw_id)] + [int(i) for i in flattened_item_ids]
     return {
-        "recommend_id": str(new_history.id),
-        "selected": formatted_selected,
+        "id": new_history.id,
+        "imageUrl": image_url,
+        "description": auto_description,
+        "clothingIds": clothingIds,
         "tpo": req.tpo,
-        "recommendations": [
-            {
-                "mainCategory": maincategory_map.get(cat, cat),
-                "items": formatted_result[cat]
-            } for cat in formatted_result
-        ]
+        "created_at": new_history.created_at.strftime("%Y-%m-%dT%H:%M:%S")
     }
 
 @router.get("/recommend/history")
 def get_recommendation_history(db: Session = Depends(get_db)):
     history = (
         db.query(RecommendationHistory)
-        .filter(RecommendationHistory.user_id == 1)
         .order_by(RecommendationHistory.created_at.desc())
         .all()
     )
@@ -228,7 +147,68 @@ def get_recommendation_history(db: Session = Depends(get_db)):
             "recommend_id": r.id,
             "selected_item_id": r.selected_item_id,
             "tpo": r.tpo,
-            "recommendations": r.recommended_items,
+            "clothingIds": r.clothingIds,
+            "imageUrl":r.imageUrl,
             "created_at": r.created_at.isoformat()
         } for r in history
     ]
+    
+@router.get("/recommend/{recommend_id}")
+def get_single_recommendation(
+    recommend_id: int,
+    db: Session = Depends(get_db)
+):
+    recommendation = db.query(RecommendationHistory).filter_by(id=recommend_id).first()
+    if not recommendation:
+        raise HTTPException(status_code=404, detail="추천 기록을 찾을 수 없습니다.")
+    
+    return recommendation 
+
+@router.post("/recommend/edit/{recommend_id}", response_model=RecommendEditResponse)
+def edit_recommend_description(
+    recommend_id: int,
+    body: RecommendEditRequest,  # ✅ 바디를 Pydantic 모델로 받음
+    db: Session = Depends(get_db)
+):
+    recommendation = db.query(RecommendationHistory).filter_by(id=recommend_id).first()
+    if not recommendation:
+        raise HTTPException(status_code=404, detail="추천 기록 없음")
+
+    recommendation.description = body.description
+    db.commit()
+    return {"result": "ok"}
+
+@router.post("/recommend/update-image/{recommend_id}", response_model=RecommendItem)
+def update_recommend_image(
+    recommend_id: int,
+    body: RecommendImageUpdateRequest,
+    db: Session = Depends(get_db)
+):
+    recommendation = db.query(RecommendationHistory).filter_by(id=recommend_id).first()
+    if not recommendation:
+        raise HTTPException(status_code=404, detail="추천 항목을 찾을 수 없습니다.")
+
+    recommendation.imageUrl = body.imageUrl 
+    db.commit()
+    db.refresh(recommendation)
+
+    def extract_ids(clothing_data):
+        if isinstance(clothing_data, list):
+            return [int(i) for i in clothing_data]
+        elif isinstance(clothing_data, dict):
+            ids = []
+            for sublist in clothing_data.values():
+                for val in sublist:
+                    raw = val.split('_')[-1]
+                    ids.append(int(raw))
+            return ids
+        return []
+
+    return {
+        "id": recommendation.id,
+        "imageUrl": recommendation.imageUrl or "",
+        "description": recommendation.description or "",
+        "clothingIds": extract_ids(recommendation.clothingIds),
+        "tpo": recommendation.tpo,
+        "created_at": recommendation.created_at.strftime("%Y-%m-%dT%H:%M:%S")
+    }

@@ -17,8 +17,8 @@ def conver_to_main_category(category):
     return category
 
 # 사용자 옷 전체 불러오기 (추천용)
-def get_user_clothes(user_id: int, db: Session) -> dict:
-    clothes_list = db.query(Clothes).filter(Clothes.user_id == user_id).all()
+def get_user_clothes(db: Session) -> dict:
+    clothes_list = db.query(Clothes).all()
 
     user_clothes = defaultdict(list)
     for item in clothes_list:

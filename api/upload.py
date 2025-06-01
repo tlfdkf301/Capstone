@@ -62,7 +62,6 @@ def upload_clothing_image(
 
     # 4. DB 저장 (style_probs는 저장하지 않음)
     new_clothes = Clothes(
-        user_id=1,  # TODO: 로그인 기능 붙으면 수정
         maincategory=maincategory,        # ✅ 한글로 저장
         category=category,                # ✅ 한글로 저장
         image_url=image_url,

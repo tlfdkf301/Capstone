@@ -10,7 +10,7 @@ class Clothes(Base):
     __tablename__ = "clothes"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, default=1)
+    imageResId = Column(Integer, default=-1)
     maincategory = Column(String)  # top, bottom, outer, dress
     category=Column(String)
     image_url = Column(String)

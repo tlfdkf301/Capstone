@@ -4,7 +4,6 @@ from fastapi.staticfiles import StaticFiles
 from api.generate_image import router as generate_router
 from api.user import router as user_router
 from api.weather import router as weather_router
-from api.auth import router as auth_router
 from api.closet import router as closet_router
 from api.recommend import router as recommend_router
 from api.upload import router as upload_router
@@ -30,7 +29,6 @@ def root():
 
 # 라우터 등록
 print("✅ Registering routers")
-app.include_router(auth_router)
 app.include_router(closet_router)
 app.include_router(recommend_router)
 app.include_router(upload_router, tags=["upload"])

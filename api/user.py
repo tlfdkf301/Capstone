@@ -14,7 +14,7 @@ PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
 UPLOAD_DIR = os.path.join(PROJECT_DIR, "static","user_images")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@router.post("/user/images")
+@router.post("/user/image")
 async def upload_user_image(
     image: UploadFile = File(...),
     db: Session = Depends(get_db)
@@ -39,7 +39,7 @@ async def upload_user_image(
         "image_url": image_url
     }
 
-@router.get("/user/images/latest")
+@router.get("/user/recentimage")
 def get_latest_user_image(db: Session = Depends(get_db)):
     image = db.query(UserImage).order_by(UserImage.created_at.desc()).first()
     if not image:

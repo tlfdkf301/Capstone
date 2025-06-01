@@ -11,12 +11,12 @@ router = APIRouter()
 # 1. 전체 조회
 @router.get("/closet")
 def get_all_clothes(db: Session = Depends(get_db)):
-    clothes = db.query(Clothes).filter(Clothes.user_id == 1).all()
+    clothes = db.query(Clothes).all()
     return [format_clothes_response(c) for c in clothes]
 
 @router.get("/closet/frequent")
 def get_frequent_clothes(db: Session = Depends(get_db)):
-    clothes = db.query(Clothes).filter(Clothes.user_id == 1).all()
+    clothes = db.query(Clothes).all()
     return [format_clothes_response(c) for c in clothes]
 
 # 2. 상세 조회
@@ -69,7 +69,7 @@ class ClothesUpdateRequest(BaseModel):
 #     db.refresh(clothes)
 #     return format_clothes_response(clothes)
 
-@router.patch("/closet/{item_id}")
+@router.patch("/closet/edit/{item_id}")
 def edit_clothes(item_id: int, update: ClothesUpdateRequest, db: Session = Depends(get_db)):
     clothes = db.query(Clothes).get(item_id)
     if not clothes:

@@ -6,10 +6,10 @@ from datetime import datetime
 
 class RecommendationHistory(Base):
     __tablename__ = "recommendation_history"
-
+    description = Column(String)
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, default=1)
     selected_item_id = Column(String)
     tpo = Column(String)
-    recommended_items = Column(JSON)  # Dict[str, List[str]] or List of dicts
+    imageUrl = Column(String)
+    clothingIds = Column(JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
