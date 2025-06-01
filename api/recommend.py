@@ -162,7 +162,26 @@ def get_single_recommendation(
     if not recommendation:
         raise HTTPException(status_code=404, detail="추천 기록을 찾을 수 없습니다.")
     
-    return recommendation 
+    def extract_ids(clothing_data):
+        if isinstance(clothing_data, list):
+            return [int(i) for i in clothing_data]
+        elif isinstance(clothing_data, dict):
+            ids = []
+            for sublist in clothing_data.values():
+                for val in sublist:
+                    raw = val.split('_')[-1]
+                    ids.append(int(raw))
+            return ids
+        return []
+
+    return {
+        "id": recommendation.id,
+        "imageUrl": recommendation.imageUrl or "",
+        "description": recommendation.description or "",
+        "clothingIds": extract_ids(recommendation.clothingIds),
+        "tpo": recommendation.tpo,
+        "created_at": recommendation.created_at.strftime("%Y-%m-%dT%H:%M:%S")
+    } 
 
 @router.post("/recommend/edit/{recommend_id}", response_model=RecommendEditResponse)
 def edit_recommend_description(
