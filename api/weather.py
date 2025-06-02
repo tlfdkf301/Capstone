@@ -45,7 +45,8 @@ def get_weather():
         return {
             "weather": WEATHER_MAP.get(main_weather, "기타"),
             "temperature": temp,
-            "humidity": humidity
+            "humidity": humidity,
+            "icon": icon
         }
     except Exception as e:
         return {"error": str(e)}
