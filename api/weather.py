@@ -9,7 +9,8 @@ router = APIRouter()
 
 CITY = "Seoul"
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
-# 영어 날씨 → 한글 간단 변환
+
+# 영어 → 한글 날씨 변환
 WEATHER_MAP = {
     "Clear": "맑음",
     "Clouds": "흐림",
@@ -33,14 +34,18 @@ def get_weather():
         response.raise_for_status()
         data = response.json()
 
+        # 날씨 정보
         main_weather = data["weather"][0]["main"]
-        description = data["weather"][0]["description"]
         icon = data["weather"][0]["icon"]
+
+        # 현재 기온 및 습도
+        temp = data["main"]["temp"]
+        humidity = data["main"]["humidity"]
 
         return {
             "weather": WEATHER_MAP.get(main_weather, "기타"),
-            "description": description,
-            "icon": icon
+            "temperature": temp,
+            "humidity": humidity
         }
     except Exception as e:
         return {"error": str(e)}
