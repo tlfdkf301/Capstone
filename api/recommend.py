@@ -144,7 +144,7 @@ def get_recommendation_history(db: Session = Depends(get_db)):
 
     return [
         {
-            "recommend_id": r.id,
+            "id": r.id,
             "selected_item_id": r.selected_item_id,
             "description":r.description,
             "tpo": r.tpo,
