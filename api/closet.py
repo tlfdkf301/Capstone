@@ -5,6 +5,7 @@ from models.clothes import Clothes
 from pydantic import BaseModel
 from typing import Optional, Dict, List
 from core.response_utils import format_clothes_response
+from sqlalchemy import desc
 
 router = APIRouter()
 
@@ -16,7 +17,13 @@ def get_all_clothes(db: Session = Depends(get_db)):
 
 @router.get("/closet/frequent")
 def get_frequent_clothes(db: Session = Depends(get_db)):
-    clothes = db.query(Clothes).all()
+    # clothes = db.query(Clothes).all()
+    clothes = (
+        db.query(Clothes)
+        .order_by(desc(Clothes.id))  # ID 높은 순 = 최신 등록 순
+        .limit(4)
+        .all()
+    )
     return [format_clothes_response(c) for c in clothes]
 
 # 2. 상세 조회
