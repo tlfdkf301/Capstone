@@ -23,7 +23,7 @@ class RecommendImageUpdateRequest(BaseModel):
     imageUrl: str
 
 class RecommendationRequest(BaseModel):
-    selected_item_id: str
+    selected_item_id: int
     tpo: str
 
 class RecommendationResponse(BaseModel):

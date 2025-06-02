@@ -82,7 +82,7 @@ def get_selected_clothing(selected_item_id: str, db: Session) -> dict | None:
         "mainCategory": main_category
     }
 
-def get_selected_clothing2(selected_item_id: str, db: Session) -> dict | None:
+def get_selected_clothing2(selected_item_id: int, db: Session) -> dict | None:
     try:
         item_id = int(selected_item_id) if "_" not in selected_item_id else int(selected_item_id.split("_")[1])
     except ValueError:
