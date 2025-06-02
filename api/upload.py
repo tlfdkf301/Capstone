@@ -20,9 +20,14 @@ from core.ai_label_to_kfashion import category_map, maincategory_map  # ✅ 카�
 router = APIRouter()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))
 UPLOAD_DIR = os.path.join(PROJECT_DIR, "static", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+def make_absolute_url(path: str) -> str:
+    if path.startswith("http"):
+        return path
+    return f"http://13.125.42.2:8000{path}"
 
 @router.post("/closet/upload")
 def upload_clothing_image(
@@ -35,7 +40,7 @@ def upload_clothing_image(
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(image.file, buffer)
 
-    image_url = f"/static/uploads/{filename}"  # 프론트 전달용
+    image_url = make_absolute_url(f"/static/uploads/{filename}")  # 프론트 전달용
 
     # 2. AI 서버 호출 
     try:
