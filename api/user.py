@@ -10,9 +10,14 @@ router = APIRouter()
 
 # 저장 디렉토리 설정
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))
 UPLOAD_DIR = os.path.join(PROJECT_DIR, "static","user_images")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+def make_absolute_url(path: str) -> str:
+    if path.startswith("http"):
+        return path
+    return f"http://13.125.42.2:8000{path}"
 
 @router.post("/user/image")
 async def upload_user_image(
@@ -27,7 +32,7 @@ async def upload_user_image(
     with open(file_path, "wb") as f:
         f.write(await image.read())
 
-    image_url = f"/static/user_images/{filename}"
+    image_url = make_absolute_url(f"/static/user_images/{filename}")
 
     # ✅ DB에 저장
     user_image = UserImage(image_id=image_id, image_url=image_url)
@@ -44,6 +49,7 @@ def get_latest_user_image(db: Session = Depends(get_db)):
     image = db.query(UserImage).order_by(UserImage.created_at.desc()).first()
     if not image:
         raise HTTPException(status_code=404, detail="No image found")
+    print(image.image_url)
     return {
         "image_id": image.image_id,
         "image_url": image.image_url

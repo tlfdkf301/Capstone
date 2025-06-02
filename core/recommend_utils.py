@@ -7,6 +7,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing
 from tqdm import tqdm
 import pandas as pd
+import random
 
 def get_top_items_by_category(sorted_result):
     """
@@ -30,7 +31,8 @@ def get_top_items_by_category(sorted_result):
     for category, items in grouped.items():
         max_score = max(score for _, score in items)
         top_items = [item_id for item_id, score in items if score == max_score]
-        top_items_by_category[category] = top_items
+        if len(top_items)>0:
+            top_items_by_category[category] = [random.choice(top_items)]
 
     return top_items_by_category
 
@@ -85,5 +87,4 @@ def run_recommendation(selected_tpo, selected_clothing, color_dict, feature_dict
     filtered_result = {
         cat: items for cat, items in top_items_by_category.items() if cat in allowed_categories
     }
-
     return filtered_result

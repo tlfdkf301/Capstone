@@ -5,6 +5,7 @@ from database import get_db
 import uuid
 import shutil
 import os
+from core.response_utils import format_clothes_response
 
 # YOLO, ResNet 모델 import
 from models.yolo import run_yolo
@@ -62,9 +63,7 @@ def upload_clothing_image(
 
     # 3. 속성 매핑
     features = map_ai_attributes_to_features(attributes)        # 스타일 점수화용
-    print(features)
     mapped = map_ai_attributes_to_kfashion_dict(attributes)     # DB 저장용 한글 변환
-
     # 4. DB 저장 (style_probs는 저장하지 않음)
     new_clothes = Clothes(
         maincategory=maincategory,        # ✅ 한글로 저장
@@ -83,4 +82,4 @@ def upload_clothing_image(
     db.commit()
     db.refresh(new_clothes)
 
-    return new_clothes
+    return format_clothes_response(new_clothes)

@@ -41,7 +41,7 @@ def get_user_clothes(db: Session) -> dict:
     return dict(user_clothes)
 
 # 선택된 옷 1개 가져오기 (추천 대상)
-def get_selected_clothing(selected_item_id: str, db: Session) -> dict | None:
+def get_selected_clothing(selected_item_id: int, db: Session) -> dict | None:
     try:
         item_id = int(selected_item_id) if "_" not in selected_item_id else int(selected_item_id.split("_")[1])
     except ValueError:

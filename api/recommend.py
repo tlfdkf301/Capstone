@@ -60,11 +60,11 @@ def recommend_clothes(req: RecommendationRequest, request: Request, db: Session 
         print(f"  - {cat}: {[item[0] for item in items]}")
 
     user_clothes = apply_style_predictions(user_clothes, model, mlb, LABEL_MAP)
-    selected_clothing = get_selected_clothing(req.selected_item_id, db)
+    selected_clothing = get_selected_clothing(str(req.selected_item_id), db)
     if not selected_clothing:
         raise HTTPException(status_code=404, detail="선택한 옷을 찾을 수 없습니다.")
     
-    test1 = get_selected_clothing2(req.selected_item_id, db)
+    test1 = get_selected_clothing2(str(req.selected_item_id), db)
     
 
 
@@ -85,10 +85,13 @@ def recommend_clothes(req: RecommendationRequest, request: Request, db: Session 
             raw_id = item_id.split('_')[-1]
             flattened_item_ids.append(raw_id)
 
+    selected_raw_id = str(req.selected_item_id).split('_')[-1]
+    clothingIds = [int(selected_raw_id)] + [int(i) for i in flattened_item_ids]
+
     new_history = RecommendationHistory(
         selected_item_id=req.selected_item_id,
         tpo=req.tpo,
-        clothingIds=flattened_item_ids,
+        clothingIds=clothingIds,
         description=auto_description, # 추천 description 자동생성
         created_at=datetime.utcnow()
     )
@@ -104,10 +107,10 @@ def recommend_clothes(req: RecommendationRequest, request: Request, db: Session 
     os.makedirs(RECOMMEND_DIR, exist_ok=True)
     
     grid_image = Image.new("RGB", (400, 400), color="white")
-    positions = [(0, 0), (200, 0), (0, 200)]
-    for i, item_id in enumerate(flattened_item_ids[:3]):
-        item_obj = clothes_dict.get(item_id)
-        if item_obj and item_obj.image_url:
+    positions = [(0, 0), (200, 0), (0, 200),(200,200)]
+    for i, item_id in enumerate(clothingIds[:4]):
+        item_obj = clothes_dict.get(str(item_id))
+        if item_obj.image_url!=None:
             image_filename = os.path.basename(item_obj.image_url)
             full_path = os.path.join(UPLOAD_DIR, image_filename)
             if os.path.exists(full_path):
@@ -122,9 +125,6 @@ def recommend_clothes(req: RecommendationRequest, request: Request, db: Session 
     image_url = str(request.url_for("static", path=f"recommend/{image_filename}"))
     new_history.imageUrl = image_url
     db.commit()
-
-    selected_raw_id = req.selected_item_id.split('_')[-1]
-    clothingIds = [int(selected_raw_id)] + [int(i) for i in flattened_item_ids]
     return {
         "id": new_history.id,
         "imageUrl": image_url,
@@ -146,6 +146,7 @@ def get_recommendation_history(db: Session = Depends(get_db)):
         {
             "recommend_id": r.id,
             "selected_item_id": r.selected_item_id,
+            "description":r.description,
             "tpo": r.tpo,
             "clothingIds": r.clothingIds,
             "imageUrl":r.imageUrl,
@@ -190,6 +191,7 @@ def edit_recommend_description(
     db: Session = Depends(get_db)
 ):
     recommendation = db.query(RecommendationHistory).filter_by(id=recommend_id).first()
+    print(recommendation)
     if not recommendation:
         raise HTTPException(status_code=404, detail="추천 기록 없음")
 

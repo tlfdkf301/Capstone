@@ -69,7 +69,7 @@ class ClothesUpdateRequest(BaseModel):
 #     db.refresh(clothes)
 #     return format_clothes_response(clothes)
 
-@router.patch("/closet/edit/{item_id}")
+@router.post("/closet/edit/{item_id}")
 def edit_clothes(item_id: int, update: ClothesUpdateRequest, db: Session = Depends(get_db)):
     clothes = db.query(Clothes).get(item_id)
     if not clothes:
