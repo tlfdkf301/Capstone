@@ -77,7 +77,7 @@ def recommend_clothes(req: RecommendationRequest, request: Request, db: Session 
         tpo_score_table=tpo_score_table
     )
 
-    auto_description = f"새 추천{uuid.uuid4().hex[:8]}" # 추천description 자동생성
+    auto_description = f"{req.tpo}_TPO_추천{uuid.uuid4().hex[:8]}" # 추천description 자동생성
 
     flattened_item_ids = []
     for item_list in result_dict.values():
