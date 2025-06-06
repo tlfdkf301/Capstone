@@ -9,6 +9,7 @@ from database import get_db
 from pydantic import BaseModel
 from models.clothes import Clothes
 from dotenv import load_dotenv
+import time
 load_dotenv()
 
 router = APIRouter()
@@ -100,6 +101,8 @@ def generate_image(req: GenerateImageRequest, db: Session = Depends(get_db)):
     os.makedirs(os.path.dirname(temp_path), exist_ok=True)
     with open(temp_path, "wb") as f:
         f.write(res1.content)
+
+    time.sleep(3)
 
     # 4. 상의 합성 API 호출
     headers_top = {"x-api-key": SEGMIND_API_KEY_TOP}
